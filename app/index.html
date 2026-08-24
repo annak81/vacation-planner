@@ -33,9 +33,22 @@
                 <textarea
                     id="destinations"
                     placeholder="Kornwestheim&#10;Wigan"
-                ></textarea>
+                >
+            </textarea>
             </label>
-
+            <label>
+                Weather model
+                <select id="weather-model">
+                    <option value="best_match">Best match</option>
+                    <option value="dwd_icon_seamless">DWD ICON</option>
+                    <option value="meteofrance_seamless">Météo-France</option>
+                    <option value="knmi_seamless">KNMI</option>
+                    <option value="dmi_seamless">DMI</option>
+                </select>
+            </label>
+            <button type="button" id="clear-destinations">
+            Clear
+            </button>
             <button id="load-weather">
                 Get forecast
             </button>
@@ -51,6 +64,7 @@
                         <th>Destination</th>
                         <th>Country</th>
                         <th>Date</th>
+                        <th>Weekday</th>
                         <th>Weather</th>
                         <th>High °C</th>
                         <th>Low °C</th>

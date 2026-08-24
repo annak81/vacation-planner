@@ -64,7 +64,7 @@ async function geocode(place) {
 }
 
 
-async function getForecast(location, start, end) {
+async function getForecast(location, start, end, model) {
     const url = new URL(
         "https://api.open-meteo.com/v1/forecast"
     );
@@ -85,8 +85,12 @@ async function getForecast(location, start, end) {
     );
 
     url.searchParams.set("timezone", "auto");
+    // url.searchParams.set("forecast_days", 14);
     url.searchParams.set("start_date", start);
     url.searchParams.set("end_date", end);
+    url.searchParams.set(
+        "models", [model].join(",")
+    );
 
     const response = await fetch(url);
 
@@ -111,7 +115,7 @@ function formatDate(dateString) {
 
     return {
         full: date.toLocaleDateString("en-GB", {
-            weekday: "short",
+           // weekday: "short",
             day: "2-digit",
             month: "short"
         }),
@@ -123,7 +127,7 @@ function formatDate(dateString) {
 }
 
 
-async function buildTable(start, end, places) {
+async function buildTable(start, end, places, model) {
     const rows = [];
 
     for (const place of places) {
@@ -133,7 +137,8 @@ async function buildTable(start, end, places) {
         const daily = await getForecast(
             location,
             start,
-            end
+            end,
+            model
         );
 
         const dates = daily.time || [];
@@ -163,15 +168,20 @@ async function buildTable(start, end, places) {
 }
 
 
-const button = document.getElementById("load-weather");
+
+const button_load = document.getElementById("load-weather");
 const status = document.getElementById("status");
 const tableBody = document.querySelector("#weather-table tbody");
 
+document.getElementById("clear-destinations").addEventListener("click", () => {
+    document.getElementById("destinations").value = "";
+});
 
-button.addEventListener("click", async () => {
+button_load.addEventListener("click", async () => {
 
     const start = document.getElementById("start-date").value;
     const end = document.getElementById("end-date").value;
+    const model = document.getElementById("weather-model").value;
 
     const places = document
         .getElementById("destinations")
@@ -195,7 +205,7 @@ button.addEventListener("click", async () => {
         return;
     }
 
-    button.disabled = true;
+    button_load.disabled = true;
     status.textContent = "Getting forecasts...";
     tableBody.innerHTML = "";
 
@@ -204,7 +214,8 @@ button.addEventListener("click", async () => {
         const rows = await buildTable(
             start,
             end,
-            places
+            places,
+            model
         );
 
         for (const row of rows) {
@@ -232,6 +243,6 @@ button.addEventListener("click", async () => {
 
     } finally {
 
-        button.disabled = false;
+        button_load.disabled = false;
     }
 });
