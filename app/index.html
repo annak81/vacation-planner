@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Vacation Planner - Destination Weather</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main>
+
+        <h1>🌍 Vacation Planner - Destination Weather</h1>
+
+        <section class="controls">
+
+            <label>
+                Start date
+                <input type="date" id="start-date">
+            </label>
+
+            <label>
+                End date
+                <input type="date" id="end-date">
+            </label>
+
+            <label>
+                Destinations
+                <textarea
+                    id="destinations"
+                    placeholder="Kornwestheim&#10;Wigan"
+                ></textarea>
+            </label>
+
+            <button id="load-weather">
+                Get forecast
+            </button>
+
+        </section>
+
+        <div id="status"></div>
+
+        <div class="table-container">
+            <table id="weather-table">
+                <thead>
+                    <tr>
+                        <th>Destination</th>
+                        <th>Country</th>
+                        <th>Date</th>
+                        <th>Weather</th>
+                        <th>High °C</th>
+                        <th>Low °C</th>
+                        <th>Rain %</th>
+                        <th>Rain mm</th>
+                        <th>Wind km/h</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
