@@ -115,7 +115,7 @@ function formatDate(dateString) {
 
     return {
         full: date.toLocaleDateString("en-GB", {
-           // weekday: "short",
+            // weekday: "short",
             day: "2-digit",
             month: "short"
         }),
@@ -167,30 +167,339 @@ async function buildTable(start, end, places, model) {
     return rows;
 }
 
-
-
 const button_load = document.getElementById("load-weather");
+const button_clear = document.getElementById("clear")
 const status = document.getElementById("status");
-const tableBody = document.querySelector("#weather-table tbody");
+const start_date = document.getElementById("start-date");
+const end_date = document.getElementById("end-date");
+const model = document.getElementById("weather-model");
+const destinationsInput = document.getElementById("destinations");
 
-document.getElementById("clear-destinations").addEventListener("click", () => {
-    document.getElementById("destinations").value = "";
+function setDefaultDates() {
+    const savedStartDate = localStorage.getItem("start-date");
+    const savedEndDate = localStorage.getItem("end-date");
+
+    if (savedStartDate !== null && savedEndDate !== null) {
+        start_date.value = savedStartDate;
+        end_date.value = savedEndDate;
+    } else {
+        const today = new Date();
+        const end = new Date(today);
+        end.setDate(end.getDate() + 15);
+
+        const toInputDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+        };
+        start_date.value = toInputDate(today);
+        end_date.value = toInputDate(end);
+    }
+
+}
+
+function setDestinations() {
+    const savedDestinations = localStorage.getItem("destinations");
+
+    if (savedDestinations !== null) {
+        destinationsInput.value = savedDestinations;
+    }
+}
+
+
+
+function initializeTabs() {
+    const buttons = document.querySelectorAll(".tab-button");
+    const contents = document.querySelectorAll(".tab-content");
+
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+
+            const targetId = button.dataset.tab;
+
+            buttons.forEach(b => {
+                b.classList.remove("active");
+            });
+
+            contents.forEach(content => {
+                content.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            document
+                .getElementById(targetId)
+                .classList.add("active");
+        });
+    });
+}
+
+function getRainClass(rainProbability, rainMm) {
+    const probability = Number(rainProbability);
+    const amount = Number(rainMm);
+
+    if (probability >= 80 || amount >= 10) {
+        return "rain-very-high";
+    }
+
+    if (probability >= 60 || amount >= 5) {
+        return "rain-high";
+    }
+
+    if (probability >= 30 || amount >= 1) {
+        return "rain-medium";
+    }
+
+    return "rain-low";
+}
+
+function getTemperatureClass(high) {
+    high = Number(high);
+
+    if (high < 0) return "temp-freezing";
+    if (high < 10) return "temp-cold";
+    if (high < 20) return "temp-cool";
+    if (high < 25) return "temp-mild";
+    if (high < 30) return "temp-warm";
+    if (high < 35) return "temp-hot";
+
+    return "temp-extreme";
+}
+
+function renderWeatherTable(rows) {
+    const tableHead = document.getElementById("weather-table-head");
+    const tableBody = document.getElementById("weather-table-body");
+    const summary = document.getElementById("results-summary");
+
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
+
+    if (!rows || rows.length === 0) {
+        summary.textContent = "No forecast data.";
+        return;
+    }
+
+    const dates = [];
+
+    for (const row of rows) {
+        const key = row.Date;
+        if (!dates.some(d => d.key === key)) {
+            dates.push({
+                key,
+                number: row.Date,
+                day: row.Day
+            });
+        }
+    }
+
+    const destinations = [];
+
+    for (const row of rows) {
+        const key = `${row.Destination}|${row.Country}`;
+
+        if (!destinations.some(d => d.key === key)) {
+            destinations.push({
+                key,
+                name: row.Destination,
+                country: row.Country
+            });
+        }
+    }
+
+    const forecast = {};
+
+    for (const row of rows) {
+        const destinationKey =
+            `${row.Destination}|${row.Country}`;
+
+        if (!forecast[destinationKey]) {
+            forecast[destinationKey] = {};
+        }
+
+        forecast[destinationKey][row.Date] = row;
+    }
+
+    // Header
+
+    const headerRow = document.createElement("tr");
+
+    const destinationHeader = document.createElement("th");
+
+    destinationHeader.className = "destination";
+    destinationHeader.textContent = "Destination";
+
+    headerRow.appendChild(destinationHeader);
+
+    for (const date of dates) {
+        const th = document.createElement("th");
+
+        th.className = "date-header";
+
+        th.innerHTML = `
+            <div class="date-day">${date.day}</div>
+            <div class="date-number">
+                ${date.number}
+            </div>
+        `;
+
+        headerRow.appendChild(th);
+    }
+
+    tableHead.appendChild(headerRow);
+
+    // Rows
+
+    for (const destination of destinations) {
+
+        const tr = document.createElement("tr");
+
+        const destinationCell =
+            document.createElement("td");
+
+        destinationCell.className = "destination";
+
+        destinationCell.innerHTML = `
+            <strong>${destination.name}</strong>
+            <br>
+            <small>${destination.country}</small>
+        `;
+
+        tr.appendChild(destinationCell);
+
+        for (const date of dates) {
+
+            const td = document.createElement("td");
+            const row =
+                forecast[destination.key]?.[date.number];
+
+            if (!row) {
+                td.textContent = "—";
+                tr.appendChild(td);
+                continue;
+            }
+            const rainClass = getRainClass(
+                row["Rain %"],
+                row["Rain mm"]
+            );
+            const temperatureClass =
+                getTemperatureClass(row["High °C"]);
+
+            td.className = `weather-cell`;
+            const weather = row.Weather || "🌤️";
+            const icon = weather.split(" ")[0];
+
+            td.innerHTML = `
+                <div class="weather-icon">
+                    ${icon}
+                </div>
+
+                <div class="temperature ${temperatureClass}">
+                    ${row["High °C"]}° /
+                    ${row["Low °C"]}°
+                </div>
+
+                <div class="rain-probability ${rainClass}">
+                    💧 ${row["Rain %"] ?? "—"}% / ${row["Rain mm"] ?? "—"}mm 
+                </div>
+            `;
+
+            td.title = [
+                weather,
+                `High: ${row["High °C"]}°C`,
+                `Low: ${row["Low °C"]}°C`,
+                `Rain probability: ${row["Rain %"]}%`,
+                `Rain: ${row["Rain mm"]} mm`,
+                `Wind: ${row["Wind km/h"]} km/h`
+            ].join("\n");
+
+            tr.appendChild(td);
+        }
+
+        tableBody.appendChild(tr);
+    }
+
+    summary.textContent =
+        `${destinations.length} destinations · ${dates.length} days`;
+}
+
+
+function renderDataFrame(rows) {
+    const tableHead = document.getElementById("dataframe-table-head");
+    const tableBody = document.getElementById("dataframe-table-body");
+
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
+
+    if (!rows || rows.length === 0) {
+        return;
+    }
+
+    // Header
+    const headerRow = document.createElement("tr");
+
+    for (const column of Object.keys(rows[0])) {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+    }
+
+    tableHead.appendChild(headerRow);
+
+    // Body
+    for (const row of rows) {
+        const tr = document.createElement("tr");
+
+        for (const value of Object.values(row)) {
+            const td = document.createElement("td");
+            td.textContent = value ?? "";
+            tr.appendChild(td);
+        }
+
+        tableBody.appendChild(tr);
+    }
+}
+
+(function init() {
+    setDestinations();
+    setDefaultDates();
+    initializeTabs();
+})();
+
+
+button_clear.addEventListener("click", () => {
+    model.value = "";
+    destinationsInput.value = "";
+    localStorage.clear();
 });
 
 button_load.addEventListener("click", async () => {
 
-    const start = document.getElementById("start-date").value;
-    const end = document.getElementById("end-date").value;
-    const model = document.getElementById("weather-model").value;
-
-    const places = document
-        .getElementById("destinations")
+    const places = destinationsInput
         .value
         .split("\n")
         .map(x => x.trim())
         .filter(Boolean);
 
-    if (!start || !end) {
+    (function putToStorage() {
+        localStorage.setItem(
+            "destinations",
+            destinationsInput.value
+        );
+        localStorage.setItem(
+            "start-date",
+            start_date.value
+        );
+        localStorage.setItem(
+            "end-date",
+            end_date.value
+        );
+
+    })();
+
+
+    if (!start_date.value || !end_date.value) {
         status.textContent = "Please select both dates.";
         return;
     }
@@ -200,36 +509,24 @@ button_load.addEventListener("click", async () => {
         return;
     }
 
-    if (start > end) {
+    if (start_date.value > end_date.value) {
         status.textContent = "Start date must be before end date.";
         return;
     }
 
     button_load.disabled = true;
     status.textContent = "Getting forecasts...";
-    tableBody.innerHTML = "";
 
     try {
 
         const rows = await buildTable(
-            start,
-            end,
+            start_date.value,
+            end_date.value,
             places,
-            model
+            model.value
         );
-
-        for (const row of rows) {
-
-            const tr = document.createElement("tr");
-
-            for (const value of Object.values(row)) {
-                const td = document.createElement("td");
-                td.textContent = value;
-                tr.appendChild(td);
-            }
-
-            tableBody.appendChild(tr);
-        }
+        renderDataFrame(rows);
+        renderWeatherTable(rows);
 
         status.textContent =
             `Loaded ${rows.length} forecast rows.`;
