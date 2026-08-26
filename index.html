@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Vacation Planner - Destination Weather</title>
+
+    <link rel="stylesheet" href="app/style.css">
+</head>
+
+<body>
+
+    <main>
+
+        <h1>🌍 Vacation Planner - Destination Weather</h1>
+
+        <section class="controls">
+
+            <label>
+                Start date
+                <input type="date" id="start-date">
+            </label>
+
+            <label>
+                End date
+                <input type="date" id="end-date">
+            </label>
+
+            <label>
+                Destinations
+                <textarea id="destinations"></textarea>
+            </label>
+            <label>
+                Weather model
+                <select id="weather-model">
+                    <option value="best_match">Best match</option>
+                    <option value="ecmwf_ifs">ECMWF IFS</option>
+                    <option value="dwd_icon_seamless">DWD ICON</option>
+                    <option value="meteofrance_seamless">Météo-France</option>
+                    <option value="knmi_seamless">KNMI</option>
+                    <option value="dmi_seamless">DMI</option>
+                </select>
+            </label>
+            <button type="button" id="clear">
+                Clear
+            </button>
+            <button id="load-weather">
+                Get forecast
+            </button>
+
+        </section>
+
+        <div id="status"></div>
+
+        <section class="results">
+
+            <div class="tabs">
+                <button type="button" class="tab-button active" data-tab="matrix-tab">
+                    Weather overview
+                </button>
+                <button type="button" class="tab-button" data-tab="dataframe-tab">
+                    Data table
+                </button>
+            </div>
+            <!-- New weather matrix -->
+            <div id="matrix-tab" class="tab-content active">
+                <div class="weather-legend">
+
+                    <div class="legend-section">
+                        <span class="legend-title">Rain</span>
+
+                        <span>
+                            <i class="legend-color rain-low"></i>
+                            Low
+                        </span>
+
+                        <span>
+                            <i class="legend-color rain-medium"></i>
+                            Medium (1mm+ || 1h+)
+                        </span>
+
+                        <span>
+                            <i class="legend-color rain-high"></i>
+                            High (5mm+ && 2h+)
+                        </span>
+
+                        <span>
+                            <i class="legend-color rain-very-high"></i>
+                            Very high (10mm+)
+                        </span>
+                    </div>
+
+                    <div class="legend-section">
+                        <span class="legend-title">Temperature</span>
+
+                        <span>
+                            <i class="legend-color temp-freezing"></i>
+                            &lt; 0°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-cold"></i>
+                            0-10°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-cool"></i>
+                            10-20°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-mild"></i>
+                            20-25°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-warm"></i>
+                            25-30°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-hot"></i>
+                            30-35°
+                        </span>
+
+                        <span>
+                            <i class="legend-color temp-extreme"></i>
+                            35°+
+                        </span>
+                    </div>
+
+                </div>
+                <div class="results-header">
+                    <span id="results-summary"></span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="weather-table">
+                        <thead id="weather-table-head"></thead>
+                        <tbody id="weather-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Existing dataframe-style output -->
+            <div id="dataframe-tab" class="tab-content">
+                <div class="table-wrapper">
+                    <table id="dataframe-table">
+                        <thead id="dataframe-table-head"></thead>
+                        <tbody id="dataframe-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app/app.js"></script>
+
+</body>
+
+</html>

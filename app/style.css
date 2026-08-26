@@ -149,19 +149,19 @@ button {
 }
 
 .rain-low {
-    background: #ddedfb;
+    background: #e3edf8;
 }
 
 .rain-medium {
-    background: #c4e3fb;
+    background: #c1e1fb;
 }
 
 .rain-high {
-    background: #a8dafb;
+    background: #99d1f7;
 }
 
 .rain-very-high {
-    background: #8dd0fd;
+    background: #5cbaf8;
 }
 
 .temp-freezing {

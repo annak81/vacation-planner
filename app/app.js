@@ -80,7 +80,9 @@ async function getForecast(location, start, end, model) {
             "temperature_2m_min",
             "precipitation_probability_max",
             "precipitation_sum",
-            "wind_speed_10m_max"
+            "precipitation_hours",
+            "wind_speed_10m_max",
+            "sunshine_duration"
         ].join(",")
     );
 
@@ -159,7 +161,9 @@ async function buildTable(start, end, places, model) {
                 "Low °C": round(daily.temperature_2m_min[i]),
                 "Rain %": daily.precipitation_probability_max[i],
                 "Rain mm": round(daily.precipitation_sum[i], 1),
-                "Wind km/h": round(daily.wind_speed_10m_max[i])
+                "Rain h": daily.precipitation_hours[i],
+                "Wind km/h": round(daily.wind_speed_10m_max[i]),
+                "Sunshine h": round(daily.sunshine_duration[i]/3600)
             });
         }
     }
@@ -236,23 +240,24 @@ function initializeTabs() {
     });
 }
 
-function getRainClass(rainProbability, rainMm) {
+function getRainClass(rainProbability, rainMm, rainHours) {
     const probability = Number(rainProbability);
     const amount = Number(rainMm);
+    const hours = Number(rainHours);
 
-    if (probability >= 80 || amount >= 10) {
+    if (amount > 0 && amount <= 1) return "rain-low";
+
+    if (amount >= 10) {
         return "rain-very-high";
     }
 
-    if (probability >= 60 || amount >= 5) {
+    if (amount >= 5 && hours >= 2) {
         return "rain-high";
     }
 
-    if (probability >= 30 || amount >= 1) {
+    if (amount > 1 || hours > 1) {
         return "rain-medium";
     }
-
-    return "rain-low";
 }
 
 function getTemperatureClass(high) {
@@ -381,12 +386,13 @@ function renderWeatherTable(rows) {
             }
             const rainClass = getRainClass(
                 row["Rain %"],
-                row["Rain mm"]
+                row["Rain mm"],
+                row["Rain h"]
             );
             const temperatureClass =
                 getTemperatureClass(row["High °C"]);
 
-            td.className = `weather-cell`;
+            td.className = `weather-cell ${rainClass}`;
             const weather = row.Weather || "🌤️";
             const icon = weather.split(" ")[0];
 
@@ -400,8 +406,10 @@ function renderWeatherTable(rows) {
                     ${row["Low °C"]}°
                 </div>
 
-                <div class="rain-probability ${rainClass}">
+                <div class="rain-probability">
                     💧 ${row["Rain %"] ?? "—"}% / ${row["Rain mm"] ?? "—"}mm 
+                    </br>
+                    ☀️ ${row["Sunshine h"] ?? "—"}h / 💧 ${row["Rain h"] ?? "—"}h
                 </div>
             `;
 
@@ -411,6 +419,7 @@ function renderWeatherTable(rows) {
                 `Low: ${row["Low °C"]}°C`,
                 `Rain probability: ${row["Rain %"]}%`,
                 `Rain: ${row["Rain mm"]} mm`,
+                `Rain hours: ${row["Rain h"]} h`,
                 `Wind: ${row["Wind km/h"]} km/h`
             ].join("\n");
 
